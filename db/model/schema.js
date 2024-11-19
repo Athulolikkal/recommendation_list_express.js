@@ -6,6 +6,7 @@ export const favouritesSchema = `
         name VARCHAR(255) NOT NULL,
         description TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
         CONSTRAINT favourites_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id)
     );
 `;

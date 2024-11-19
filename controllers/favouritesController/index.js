@@ -1,4 +1,4 @@
-import { addFavourite, getFavouriteByUserIdAndName } from "../../db/repo/favourites.js";
+import { addFavourite, getFavouriteByUserIdAndName, removeFavouriteById } from "../../db/repo/favourites.js";
 import { getUserById } from "../../db/repo/users.js";
 
 const favouritesController = {
@@ -29,7 +29,7 @@ const favouritesController = {
                     message: 'A collection with the same name already exists for this user.'
                 });
             }
-            // Create the new favourite collection
+            // Create the new  collection
             const createFavourites = await addFavourite(userId, newCollectionName, description);
             if (createFavourites?.status) {
                 console.log('New favourite collection created:', createFavourites);
@@ -39,6 +39,7 @@ const favouritesController = {
                     data: createFavourites
                 });
             } else {
+                // Any unexpected issues happen
                 return res.status(500).json({
                     status: false,
                     message: 'Unable to create the new collection. Please try again later.'
@@ -56,9 +57,24 @@ const favouritesController = {
     // Remove collection
     removeFavourites: async (req, res) => {
         try {
-            console.log('remove favourites');
+            const favId = req?.params?.id
+            //validating id, if its not a valid id then
+            if (!favId || isNaN(favId) || parseInt(favId) <= 0) {
+                return res.status(400).json({ status: false, message: 'Invalid or missing ID' });
+            }
+
+            const removeItem = await removeFavouriteById(favId)
+            if (removeItem?.status) {
+                return res.status(201).json(removeItem)
+            }
+            return res.status(409).json({ status: false, message: 'deletion failed, please try again' })
+
         } catch (err) {
             console.log(err);
+            return res.status(500).json({
+                status: false,
+                message: 'Something went wrong while creating the favourite collection. Please try again later.'
+            });
         }
     }
 

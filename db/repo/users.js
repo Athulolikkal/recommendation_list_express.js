@@ -5,9 +5,9 @@ export const getUserById = async (userId) => {
     const query = async () => await sql`SELECT * FROM users WHERE id = ${userId}`;
     const isUser = await executeQuery(query)
     // checking user
-    if (Array.isArray(isUser) && isUser.length === 1) {
+    if (isUser && Array.isArray(isUser) && isUser.length === 1) {
         return { status: true, userDetails: isUser[0] }
     }
     //else retruning error as true
-    return { error: true }
+    return { error: true, status: false }
 };
