@@ -75,3 +75,22 @@ export const getFavouriteById = async (favId) => {
     }
     return { error: true, status: false }
 }
+
+// removing recommendation id
+export const removeRecommendationFromFav = async (favId, recomId) => {
+    const query = async () => {
+        const result = await sql`
+            UPDATE public.favourites
+            SET recommendation_ids = ARRAY_REMOVE(recommendation_ids, ${recomId}),
+                updated_at = NOW()
+            WHERE id = ${favId}
+            RETURNING recommendation_ids;
+        `;
+        return result;
+    };
+    const response = await executeQuery(query);
+    if (response && Array.isArray(response) && response[0]?.recommendation_ids) {
+        return { status: true, updatedIds: response[0]?.recommendation_ids };
+    }
+    return { error: true, message: 'Failed to remove recommendation ID' };
+}

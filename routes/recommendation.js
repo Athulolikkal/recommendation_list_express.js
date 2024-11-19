@@ -2,5 +2,6 @@ import recommendationController from "../controllers/recommendationController/in
 
 export default function recommendationRouter(router) {
     router.route('/addtofav').put(recommendationController.addRecommendationToFav)
+    router.route('/removefromfav').put(recommendationController.removeRecommendationFromFav)
     return router;
 }

@@ -1,6 +1,5 @@
-import { addRecommendationToFav, getFavouriteById } from "../../db/repo/favourites.js";
-import { getRecommendationDetailsById } from "../../db/repo/recommendation.js";
-import { getUserById } from "../../db/repo/users.js";
+import { addRecommendationToFav, removeRecommendationFromFav } from "../../db/repo/favourites.js";
+import { validateCollectionProcess } from "../../utils/validateCollectionAddingAndRemoving.js";
 
 const recommendationController = {
     addRecommendationToFav: async (req, res) => {
@@ -10,23 +9,16 @@ const recommendationController = {
             if (!userId || !favId || !recommendationId) {
                 return res.status(400).json({ status: false, message: 'Required fields are missing' })
             }
-            // validating ids
-            const isUser = await getUserById(userId);
-            const isFav = await getFavouriteById(favId);
-            const isRecom = await getRecommendationDetailsById(recommendationId)
 
-            // any item is not valid then
-            if (!isUser?.status || !isFav?.status || !isRecom?.status) {
-                return res.status(404).json({ status: false, message: 'Invalid ids' })
-            }
+            const validateProcess = await validateCollectionProcess(userId, favId, recommendationId)
 
-            //check collection and recommendation is created by the same user
-            if (parseInt(userId) !== parseInt(isFav?.favDetails?.user_id) || parseInt(userId) !== parseInt(isRecom?.recommendationDetails?.user_id)) {
-                return res.status(401).json({ status: false, message: "Permission denied..." })
+            //if validation fails
+            if (!validateProcess?.status) {
+                return res.status(validateProcess.code).json({ status: validateProcess?.status, message: validateProcess.message })
             }
 
             //checking the recommendation already included in the collection
-            if (isFav?.favDetails?.recommendation_ids.length > 0 && isFav?.favDetails?.recommendation_ids.includes(recommendationId?.toString())) {
+            if (validateProcess?.favourites?.length > 0 && validateProcess?.favourites?.includes(recommendationId?.toString())) {
                 return res.status(409).json({ status: false, message: 'recommendtion is already present in the collection' })
             }
 
@@ -41,6 +33,35 @@ const recommendationController = {
             });
         } catch (err) {
             console.log(err, ':error happend');
+            return res.status(500).json({
+                status: false,
+                message: 'something went wrong please try again later'
+            });
+        }
+    },
+    removeRecommendationFromFav: async (req, res) => {
+        try {
+            const { userId, favId, recommendationId } = req?.body
+            //if values are not present
+            if (!userId || !favId || !recommendationId) {
+                return res.status(400).json({ status: false, message: 'Required fields are missing' })
+            }
+            const validateProcess = await validateCollectionProcess(userId, favId, recommendationId)
+            //if validation fails
+            if (!validateProcess?.status) {
+                return res.status(validateProcess.code).json({ status: validateProcess?.status, message: validateProcess.message })
+            }
+            //removing recommendation id from the collection
+            const removeRecommendationIdFromFav = await removeRecommendationFromFav(favId, recommendationId)
+            if (removeRecommendationIdFromFav?.status) {
+                return res.status(200).json(removeRecommendationIdFromFav)
+            }
+            return res.status(500).json({
+                status: false,
+                message: 'Faild to remove the recommendation'
+            });
+        } catch (err) {
+            console.log(err);
             return res.status(500).json({
                 status: false,
                 message: 'something went wrong please try again later'
