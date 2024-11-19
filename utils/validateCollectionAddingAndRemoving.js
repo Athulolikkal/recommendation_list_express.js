@@ -1,8 +1,8 @@
-import favouritesController from "../controllers/favouritesController/index.js";
 import { getFavouriteById } from "../db/repo/favourites.js";
 import { getRecommendationDetailsById } from "../db/repo/recommendation.js";
 import { getUserById } from "../db/repo/users.js";
 
+//validation user,collection and recommendation
 export const validateCollectionProcess = async (userId, favId, recommendationId) => {
     try {
         const isUser = await getUserById(userId);
