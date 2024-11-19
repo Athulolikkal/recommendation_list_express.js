@@ -94,3 +94,22 @@ export const removeRecommendationFromFav = async (favId, recomId) => {
     }
     return { error: true, message: 'Failed to remove recommendation ID' };
 }
+
+export const getPaginatedFavByUserId = async (userId, pageSize, pageNumber) => {
+    const offset = (pageNumber - 1) * pageSize;
+    const query = async () => {
+        const result = await sql`
+            SELECT * 
+            FROM public.favourites
+            WHERE user_id = ${userId}
+            ORDER BY created_at DESC
+            LIMIT ${pageSize} OFFSET ${offset};
+        `;
+        return result;
+    };
+    const response = await executeQuery(query);
+    if (response && Array.isArray(response)) {
+        return { list: response, status: true }
+    }
+    return { error: true, status: false, message: 'failed to fetch the details' }
+}
